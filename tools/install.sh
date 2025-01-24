@@ -40,7 +40,7 @@
 set -e
 
 # Default settings
-SPIN_HOME=${SPIN_HOME:-$HOME/.spin}
+SPIN_HOME=${SPIN_HOME:-$HOME/.spin-demo}
 SPIN_CACHE_DIR=${SPIN_CACHE_DIR:-$SPIN_HOME/cache}
 REPO=${REPO:-fouteox/spin}
 REMOTE=${REMOTE:-https://github.com/${REPO}.git}
