@@ -602,11 +602,13 @@ get_md5_hash() {
 
 github_default_branch() {
   local repo="$1"
-  local branch="main"
-  
-#  branch=$(curl --silent "https://api.github.com/repos/$repo" | grep '"default_branch":' | sed -E 's/.*"([^"]+)".*/\1/')
+  local branch=""
+
+  branch=$(curl --silent "https://api.github.com/repos/$repo" | grep -E '^\s*"default_branch":' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
 
   echo "$branch"
+
+  sleep 10
 }
 
 installation_type() {
