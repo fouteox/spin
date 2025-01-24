@@ -192,7 +192,7 @@ get_install_version() {
     # absolute latest release, regardless of pre-release or stable
     curl --silent \
       -H "Accept: application/vnd.github.v3+json" \
-      "https://api.github.com/repos/serversideup/spin/releases" | \
+      "https://api.github.com/repos/fouteox/spin/releases" | \
     grep '"tag_name":' | \
     sed -E 's/.*"([^"]+)".*/\1/' | \
     head -n 1
@@ -200,7 +200,7 @@ get_install_version() {
     # Get latest stable release
     curl --silent \
       -H 'Accept: application/vnd.github.v3.sha' \
-      "https://api.github.com/repos/serversideup/spin/releases/latest" | \
+      "https://api.github.com/repos/fouteox/spin/releases/latest" | \
     grep '"tag_name":' | \
     sed -E 's/.*"([^"]+)".*/\1/'
   fi
