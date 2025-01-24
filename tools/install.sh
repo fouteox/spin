@@ -36,7 +36,7 @@
 # Settings
 ###########################################################################################################
 
-set -x
+# set -x
 set -e
 
 # Default settings
@@ -188,11 +188,11 @@ get_install_version() {
     return 0
   fi
   if [ "$TRACK" = "beta" ]; then
-    # Get the latest release (including pre-releases). We just want the 
+    # Get the latest release (including pre-releases). We just want the
     # absolute latest release, regardless of pre-release or stable
     curl --silent \
       -H "Accept: application/vnd.github.v3+json" \
-      "https://api.github.com/repos/fouteox/spin/releases" | \
+      "https://api.github.com/repos/serversideup/spin/releases" | \
     grep '"tag_name":' | \
     sed -E 's/.*"([^"]+)".*/\1/' | \
     head -n 1
@@ -200,7 +200,7 @@ get_install_version() {
     # Get latest stable release
     curl --silent \
       -H 'Accept: application/vnd.github.v3.sha' \
-      "https://api.github.com/repos/fouteox/spin/releases/latest" | \
+      "https://api.github.com/repos/serversideup/spin/releases/latest" | \
     grep '"tag_name":' | \
     sed -E 's/.*"([^"]+)".*/\1/'
   fi
@@ -216,7 +216,12 @@ save_last_update_check_time() {
 }
 
 setup_spin() {
-  umask g-w,o-w
+  # Prevent the cloned repository from having insecure permissions. Failing to do
+  # so causes compinit() calls to fail with "command not found: compdef" errors
+  # for users with insecure umasks (e.g., "002", allowing group writability). Note
+  # that this will be ignored under Cygwin by default, as Windows ACLs take
+  # precedence over umasks except for filesystems mounted with option "noacl".
+umask g-w,o-w
 
   command_exists git || {
     fmt_error "git is not installed"
@@ -224,31 +229,23 @@ setup_spin() {
   }
 
   SPIN_INSTALL_VERSION=$(get_install_version)
-  echo "Debug: Installation version = $SPIN_INSTALL_VERSION"
 
   echo "${BLUE}Cloning Spin \"$SPIN_INSTALL_VERSION\"...${RESET}"
 
   # Initialize an empty Git repository
-  echo "Debug: Creating directory $SPIN_HOME"
-  mkdir -p "$SPIN_HOME" || { echo "Failed to create directory"; exit 1; }
+  mkdir -p "$SPIN_HOME" > /dev/null 2>&1
+  git init "$SPIN_HOME" > /dev/null 2>&1
+  cd "$SPIN_HOME"
 
-  echo "Debug: Initializing git repository"
-  git init "$SPIN_HOME" || { echo "Failed to init git"; exit 1; }
+  # Add the remote repository
+  git remote add -f origin "$REMOTE" > /dev/null 2>&1
 
-  echo "Debug: Changing to directory"
-  cd "$SPIN_HOME" || { echo "Failed to change directory"; exit 1; }
+  # Set explicit endings
+  git config core.eol lf
+  git config core.autocrlf false
 
-  echo "Debug: Adding remote repository"
-  git remote add -f origin "$REMOTE" || { echo "Failed to add remote"; exit 1; }
-
-  echo "Debug: Configuring git"
-  git config core.eol lf || { echo "Failed to configure eol"; exit 1; }
-  git config core.autocrlf false || { echo "Failed to configure autocrlf"; exit 1; }
-
-  echo "Debug: Setting up sparse checkout"
-  git config core.sparseCheckout true || { echo "Failed to enable sparse checkout"; exit 1; }
-
-  echo "Debug: Writing sparse checkout config"
+  # Enable sparse checkout and configure it
+  git config core.sparseCheckout true > /dev/null 2>&1
   echo "/*" > .git/info/sparse-checkout
   echo "!/docs" >> .git/info/sparse-checkout
   echo "!/.github" >> .git/info/sparse-checkout
@@ -256,18 +253,16 @@ setup_spin() {
   echo "!/package.json" >> .git/info/sparse-checkout
   echo "!/.npmignore" >> .git/info/sparse-checkout
 
-  echo "Debug: Fetching version $SPIN_INSTALL_VERSION"
-  git fetch --depth=1 origin "$SPIN_INSTALL_VERSION" || { echo "Failed to fetch"; exit 1; }
+  # Fetch and checkout the specific branch with depth 1
+  git fetch --depth=1 origin "$SPIN_INSTALL_VERSION" > /dev/null 2>&1
+  git checkout FETCH_HEAD > /dev/null 2>&1
 
-  echo "Debug: Checking out FETCH_HEAD"
-  git checkout FETCH_HEAD || { echo "Failed to checkout"; exit 1; }
-
-  echo "Debug: Setting up configuration"
+  # Additional setup steps
   set_configuration_file
   save_last_update_check_time
   prompt_to_add_path
 
-  echo "Debug: Setup complete"
+  echo #Empty line
 }
 
 prompt_to_add_path() {
