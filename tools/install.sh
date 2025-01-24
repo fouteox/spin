@@ -42,7 +42,7 @@ set -e
 # Default settings
 SPIN_HOME=${SPIN_HOME:-$HOME/.spin}
 SPIN_CACHE_DIR=${SPIN_CACHE_DIR:-$SPIN_HOME/cache}
-REPO=${REPO:-serversideup/spin}
+REPO=${REPO:-fouteox/spin}
 REMOTE=${REMOTE:-https://github.com/${REPO}.git}
 BRANCH=${BRANCH:-''}
 TRACK=${TRACK:-stable}
